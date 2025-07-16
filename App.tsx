@@ -2,7 +2,7 @@ import React, { useState, useRef, useCallback, useEffect } from 'react';
 import html2canvas from 'html2canvas';
 import Ticket from './components/Ticket';
 import PaymentModal from './components/PaymentModal';
-import { DownloadIcon, QrCodeIcon, TicketIcon, ChevronLeftIcon, HistoryIcon, ChevronRightIcon, CreditCardIcon, CheckCircleIcon, ShareIcon, SpinnerIcon, CancelIcon } from './components/IconComponents';
+import { DownloadIcon, QrCodeIcon, TicketIcon, ChevronLeftIcon, HistoryIcon, ChevronRightIcon, CreditCardIcon, CheckCircleIcon, ShareIcon, SpinnerIcon, CancelIcon, LogoutIcon } from './components/IconComponents';
 import EventCard from './components/EventCard';
 import { TICKET_TYPES } from './constants';
 import type { TicketData, Event, TicketType, User } from './types';
@@ -11,9 +11,10 @@ import type { FakeApi } from './api';
 interface AppProps {
     api: FakeApi;
     user: User;
+    onLogout: () => void;
 }
 
-const App: React.FC<AppProps> = ({ api, user }) => {
+const App: React.FC<AppProps> = ({ api, user, onLogout }) => {
   const [events, setEvents] = useState<Event[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [formData, setFormData] = useState({
@@ -515,8 +516,8 @@ const renderRedeemView = () => (
         ) : (
             <>
                 <header className="w-full max-w-5xl text-center mb-10">
-                    <div className="flex items-center justify-center gap-4">
-                        <TicketIcon className="w-12 h-12 text-indigo-400"/>
+                    <div className="flex items-baseline justify-center gap-4">
+                        <TicketIcon className="w-12 h-12 text-indigo-400 transform -translate-y-2"/>
                         <h1 className="font-orbitron text-4xl sm:text-5xl font-bold tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-indigo-400">
                             Plataforma de Eventos
                         </h1>
@@ -527,7 +528,7 @@ const renderRedeemView = () => (
                         {activeTab === 'redeem' && 'Canjea una entrada que te ha enviado un amigo.'}
                     </p>
                     
-                    <nav className="mt-8 flex justify-center border-b border-gray-700">
+                    <nav className="mt-8 flex justify-center border-b border-gray-700 relative">
                         <button 
                             onClick={() => setActiveTab('events')} 
                             className={`px-6 py-3 font-medium text-lg transition-colors ${activeTab === 'events' ? 'text-indigo-400 border-b-2 border-indigo-400' : 'text-gray-400 hover:text-white'}`}
@@ -548,6 +549,16 @@ const renderRedeemView = () => (
                             <QrCodeIcon className="w-5 h-5"/>
                             Canjear Entrada
                         </button>
+                        <div className="absolute right-0 bottom-2.5">
+                            <button 
+                                onClick={onLogout} 
+                                title="Cerrar sesión"
+                                className="flex items-center gap-2 text-gray-500 hover:text-red-400 transition-colors px-3 py-1 rounded-md hover:bg-gray-800"
+                            >
+                                <span className="hidden sm:inline text-sm">{user.name}</span>
+                                <LogoutIcon className="w-5 h-5"/>
+                            </button>
+                        </div>
                     </nav>
                 </header>
 

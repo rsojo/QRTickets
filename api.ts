@@ -14,8 +14,12 @@ const generateQrValue = (ticketId: string, attendeeName: string, timestamp: numb
     return JSON.stringify(payload);
 };
 
+interface DbUser extends User {
+    password?: string;
+}
+
 class FakeDatabase {
-    private users: Record<string, User> = {};
+    private users: Record<string, DbUser> = {};
     private tickets: Record<string, TicketData> = {};
     private pendingTransfers: Record<string, string> = {}; // { transferCode: ticketId }
 
@@ -24,13 +28,23 @@ class FakeDatabase {
     }
 
     private load() {
+        const defaultUsers: Record<string, DbUser> = {
+            'user-1': { id: 'user-1', name: 'Alex Doe', password: 'password' },
+            'user-2': { id: 'user-2', name: 'Jane Smith', password: 'password' }
+        };
+
         try {
-            this.users = JSON.parse(localStorage.getItem('db_users') || '{"user-1":{"id":"user-1","name":"Alex Doe"}}');
+            const storedUsers = localStorage.getItem('db_users');
+            this.users = storedUsers ? JSON.parse(storedUsers) : defaultUsers;
             this.tickets = JSON.parse(localStorage.getItem('db_tickets') || '{}');
             this.pendingTransfers = JSON.parse(localStorage.getItem('db_pendingTransfers') || '{}');
+            
+            if (!storedUsers) {
+                this.save(); // Save default users if they were just created
+            }
         } catch (e) {
             console.error("Failed to load fake DB from localStorage", e);
-            this.users = {"user-1":{"id":"user-1","name":"Alex Doe"}};
+            this.users = defaultUsers;
             this.tickets = {};
             this.pendingTransfers = {};
             this.save();
@@ -43,7 +57,20 @@ class FakeDatabase {
         localStorage.setItem('db_pendingTransfers', JSON.stringify(this.pendingTransfers));
     }
     
-    getUser(id: string): User | undefined { return this.users[id]; }
+    findUserByCredentials(name: string, pass: string): User | undefined {
+        const userRecord = Object.values(this.users).find(u => u.name.toLowerCase() === name.toLowerCase());
+
+        if (userRecord && userRecord.password === pass) {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const { password, ...userToReturn } = userRecord;
+            return userToReturn;
+        }
+        return undefined;
+    }
+    
+    getUserById(id: string): DbUser | undefined {
+        return this.users[id];
+    }
 
     getTicket(id: string): TicketData | undefined { return this.tickets[id]; }
     
@@ -83,7 +110,7 @@ class FakeDatabase {
         return ticketId ? this.getTicket(ticketId) : undefined;
     }
     
-    completeTransfer(code: string, newUserId: string): TicketData | null {
+    completeTransfer(code: string, newUserId: string, newUserName: string): TicketData | null {
         const ticketId = this.pendingTransfers[code];
         if (!ticketId) return null;
         
@@ -94,6 +121,7 @@ class FakeDatabase {
         delete ticket.transferCode;
         
         ticket.userId = newUserId;
+        ticket.attendeeName = newUserName;
         this.saveTicket(ticket);
         this.save();
 
@@ -122,8 +150,13 @@ class FakeDatabase {
 export class FakeApi {
     private db = new FakeDatabase();
 
-    async login(username: string = "Alex Doe"): Promise<User> {
-        const user: User = this.db.getUser("user-1")!;
+    async login(username: string, password: string): Promise<User> {
+        const user = this.db.findUserByCredentials(username, password);
+        if (!user) {
+            // Simulate check latency on failure
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            throw new Error("Usuario o contraseña no válidos.");
+        }
         return fakeAsync(user);
     }
 
@@ -190,15 +223,20 @@ export class FakeApi {
         const ticketToRedeem = this.db.findTicketByTransferCode(code);
         
         if (!ticketToRedeem) {
-            throw new Error("Invalid or already used transfer code.");
+            throw new Error("Código de transferencia no válido o ya utilizado.");
         }
         
         if (ticketToRedeem.userId === newUserId) {
-            throw new Error("You cannot redeem your own ticket.");
+            throw new Error("No puedes canjear tu propia entrada.");
+        }
+        
+        const newUser = this.db.getUserById(newUserId);
+        if (!newUser) {
+            throw new Error("No se pudo encontrar al usuario que canjea la entrada.");
         }
 
-        const redeemedTicket = this.db.completeTransfer(code, newUserId);
-        if (!redeemedTicket) throw new Error("Failed to complete transfer.");
+        const redeemedTicket = this.db.completeTransfer(code, newUserId, newUser.name);
+        if (!redeemedTicket) throw new Error("No se pudo completar la transferencia.");
 
         return fakeAsync(redeemedTicket);
     }

@@ -22,6 +22,10 @@ const Main = () => {
         setUser(loggedInUser);
     };
 
+    const handleLogout = () => {
+        setUser(null);
+    };
+
     if (!user) {
         return <LoginScreen api={api} onLoginSuccess={handleLoginSuccess} />;
     }
@@ -29,7 +33,7 @@ const Main = () => {
     // Main app fades in after login
     return (
         <div className="animate-fade-in-up">
-            <App api={api} user={user} />
+            <App api={api} user={user} onLogout={handleLogout} />
         </div>
     );
 };
