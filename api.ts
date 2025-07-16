@@ -34,16 +34,31 @@ class FakeDatabase {
         };
 
         try {
-            const storedUsers = localStorage.getItem('db_users');
-            this.users = storedUsers ? JSON.parse(storedUsers) : defaultUsers;
+            const storedUsersData = localStorage.getItem('db_users');
+            let loadedUsers = storedUsersData ? JSON.parse(storedUsersData) : {};
+            
+            let needsSave = !storedUsersData;
+            for (const key in defaultUsers) {
+                if (!loadedUsers[key]) {
+                    // If default user doesn't exist, add it
+                    loadedUsers[key] = defaultUsers[key];
+                    needsSave = true;
+                } else if (!loadedUsers[key].password) {
+                    // If default user exists but without a password, add it
+                    loadedUsers[key].password = defaultUsers[key].password;
+                    needsSave = true;
+                }
+            }
+
+            this.users = loadedUsers;
             this.tickets = JSON.parse(localStorage.getItem('db_tickets') || '{}');
             this.pendingTransfers = JSON.parse(localStorage.getItem('db_pendingTransfers') || '{}');
             
-            if (!storedUsers) {
-                this.save(); // Save default users if they were just created
+            if (needsSave) {
+                this.save();
             }
         } catch (e) {
-            console.error("Failed to load fake DB from localStorage", e);
+            console.error("Failed to load fake DB from localStorage, resetting to defaults", e);
             this.users = defaultUsers;
             this.tickets = {};
             this.pendingTransfers = {};

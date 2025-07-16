@@ -320,13 +320,13 @@ const renderRedeemView = () => (
 
   const renderTicketGenerator = () => (
     <>
-     <header className="w-full max-w-4xl mb-8">
+     <header className="w-full max-w-4xl mb-8 pt-8">
         <button onClick={handleBackToList} className="flex items-center gap-2 text-indigo-400 hover:text-indigo-300 transition-colors mb-4">
             <ChevronLeftIcon className="w-5 h-5" />
             Volver a Eventos
         </button>
         <div className="text-center">
-            <h1 className="font-orbitron text-4xl sm:text-5xl font-bold tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-indigo-400">
+            <h1 className="font-orbitron text-3xl sm:text-4xl font-bold tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-indigo-400">
                 {selectedEvent?.name}
             </h1>
             <p className="mt-2 text-lg text-gray-300">
@@ -505,6 +505,14 @@ const renderRedeemView = () => (
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-4 sm:p-6 lg:p-8 flex flex-col items-center w-full">
+        <button
+            onClick={onLogout}
+            className="fixed top-5 right-5 z-50 flex items-center gap-2 bg-gray-800 text-white font-semibold py-2 px-4 rounded-lg transition-colors shadow-lg border border-gray-700 hover:bg-gray-700 hover:border-gray-600"
+        >
+            <LogoutIcon className="w-5 h-5" />
+            <span>Logout</span>
+        </button>
+
         {showPaymentSuccess && (
             <div className="fixed top-5 right-5 bg-green-600 text-white py-3 px-5 rounded-lg shadow-lg z-[100] flex items-center gap-3 animate-fade-in-down">
                 <CheckCircleIcon className="w-6 h-6" />
@@ -515,10 +523,10 @@ const renderRedeemView = () => (
             renderTicketGenerator()
         ) : (
             <>
-                <header className="w-full max-w-5xl text-center mb-10">
+                <header className="w-full max-w-5xl text-center mb-10 pt-8">
                     <div className="flex items-baseline justify-center gap-4">
                         <TicketIcon className="w-12 h-12 text-indigo-400 transform -translate-y-2"/>
-                        <h1 className="font-orbitron text-4xl sm:text-5xl font-bold tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-indigo-400">
+                        <h1 className="font-orbitron text-3xl sm:text-4xl font-bold tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-indigo-400">
                             Plataforma de Eventos
                         </h1>
                     </div>
@@ -549,16 +557,6 @@ const renderRedeemView = () => (
                             <QrCodeIcon className="w-5 h-5"/>
                             Canjear Entrada
                         </button>
-                        <div className="absolute right-0 bottom-2.5">
-                            <button 
-                                onClick={onLogout} 
-                                title="Cerrar sesión"
-                                className="flex items-center gap-2 text-gray-500 hover:text-red-400 transition-colors px-3 py-1 rounded-md hover:bg-gray-800"
-                            >
-                                <span className="hidden sm:inline text-sm">{user.name}</span>
-                                <LogoutIcon className="w-5 h-5"/>
-                            </button>
-                        </div>
                     </nav>
                 </header>
 
